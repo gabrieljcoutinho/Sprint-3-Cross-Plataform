@@ -4,13 +4,14 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Modal,
   TextInput,
   Dimensions,
   PanResponder,
   Animated,
 } from 'react-native';
+
+import { styles } from '../Css/styleKanban';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 900;
@@ -42,21 +43,13 @@ export default function KanbanContent() {
   });
 
   const openModal = (colKey, card = null) => {
-    if (card) {
-      setModalData({
-        id: card.id,
-        title: card.title,
-        description: card.description,
-        colKey,
-      });
-    } else {
-      setModalData({
-        id: null,
-        title: '',
-        description: '',
-        colKey,
-      });
-    }
+    setModalData({
+      id: card?.id ?? null,
+      title: card?.title ?? '',
+      description: card?.description ?? '',
+      colKey,
+    });
+
     setIsModalOpen(true);
   };
 
@@ -70,7 +63,7 @@ export default function KanbanContent() {
           card.id === modalData.id
             ? {
                 ...card,
-                title: modalData.title,
+                title: modalData.title.trim(),
                 description: modalData.description,
               }
             : card
@@ -85,16 +78,20 @@ export default function KanbanContent() {
 
       setBoard((prev) => ({
         ...prev,
-        [modalData.colKey]: [...prev[modalData.colKey], newCard],
+        [modalData.colKey]: [
+          ...prev[modalData.colKey],
+          newCard,
+        ],
       }));
     }
+
     setIsModalOpen(false);
   };
 
   const handleRemove = (colKey, cardId) => {
     setBoard((prev) => ({
       ...prev,
-      [colKey]: prev[colKey].filter((c) => c.id !== cardId),
+      [colKey]: prev[colKey].filter((card) => card.id !== cardId),
     }));
   };
 
@@ -103,43 +100,43 @@ export default function KanbanContent() {
 
     setBoard((prev) => ({
       ...prev,
-      [from]: prev[from].filter((c) => c.id !== card.id),
+      [from]: prev[from].filter((item) => item.id !== card.id),
       [to]: [...prev[to], card],
     }));
   };
 
   const measureColumn = (key, node) => {
-    if (node) {
-      setTimeout(() => {
-        node.measure((x, y, width, height, pageX, pageY) => {
-          columnLayouts.current[key] = {
-            left: pageX,
-            right: pageX + width,
-            top: pageY,
-            bottom: pageY + height,
-          };
-        });
-      }, 150);
-    }
+    if (!node) return;
+
+    setTimeout(() => {
+      node.measure((x, y, columnWidth, height, pageX, pageY) => {
+        columnLayouts.current[key] = {
+          left: pageX,
+          right: pageX + columnWidth,
+          top: pageY,
+          bottom: pageY + height,
+        };
+      });
+    }, 150);
   };
 
   const DraggableCard = ({ card, columnKey, columnColor }) => {
     const pan = useRef(new Animated.ValueXY()).current;
     const [isDragging, setIsDragging] = useState(false);
-
-    // Armazena persistente o valor atual do Pan para evitar resets ao reiniciar o arrasto
     const offsetRef = useRef({ x: 0, y: 0 });
 
     const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 2 || Math.abs(g.dy) > 2,
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > 2 || Math.abs(gesture.dy) > 2,
 
       onPanResponderGrant: () => {
         setIsDragging(true);
+
         pan.setOffset({
           x: offsetRef.current.x,
           y: offsetRef.current.y,
         });
+
         pan.setValue({ x: 0, y: 0 });
       },
 
@@ -148,46 +145,50 @@ export default function KanbanContent() {
         { useNativeDriver: false }
       ),
 
-      onPanResponderRelease: (evt, gestureState) => {
-        // Salva os offsets acumulados antes do cálculo
+      onPanResponderRelease: (event, gestureState) => {
         offsetRef.current.x += gestureState.dx;
         offsetRef.current.y += gestureState.dy;
 
         pan.flattenOffset();
 
-        const dropX = gestureState.absoluteX || evt.nativeEvent.pageX;
-        const dropY = gestureState.absoluteY || evt.nativeEvent.pageY;
+        const dropX =
+          gestureState.moveX ||
+          gestureState.absoluteX ||
+          event.nativeEvent.pageX;
+
+        const dropY =
+          gestureState.moveY ||
+          gestureState.absoluteY ||
+          event.nativeEvent.pageY;
 
         let targetColumn = columnKey;
 
-        // Varredura de colisão precisa
         for (const key of Object.keys(columnLayouts.current)) {
           const layout = columnLayouts.current[key];
-          if (layout) {
-            if (isMobile) {
-              const insideY = dropY >= layout.top && dropY <= layout.bottom;
-              if (insideY) {
-                targetColumn = key;
-                break;
-              }
-            } else {
-              const insideX = dropX >= layout.left && dropX <= layout.right;
-              if (insideX) {
-                targetColumn = key;
-                break;
-              }
+
+          if (!layout) continue;
+
+          if (isMobile) {
+            if (dropY >= layout.top && dropY <= layout.bottom) {
+              targetColumn = key;
+              break;
             }
+          } else if (
+            dropX >= layout.left &&
+            dropX <= layout.right
+          ) {
+            targetColumn = key;
+            break;
           }
         }
 
-        // Reseta referências locais do card se ele trocar de coluna
         if (targetColumn !== columnKey) {
           offsetRef.current = { x: 0, y: 0 };
           pan.setValue({ x: 0, y: 0 });
+
           moveCard(columnKey, targetColumn, card);
           setIsDragging(false);
         } else {
-          // Se soltar na mesma coluna, ele volta de forma suave para a vaga original
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
             useNativeDriver: false,
@@ -206,19 +207,32 @@ export default function KanbanContent() {
           styles.card,
           {
             transform: pan.getTranslateTransform(),
-            zIndex: isDragging ? 999999 : 1,
-            elevation: isDragging ? 999999 : 1,
+            zIndex: isDragging ? 999 : 1,
+            elevation: isDragging ? 999 : 1,
             opacity: isDragging ? 0.9 : 1,
           },
         ]}
       >
         <View style={styles.cardTop}>
-          <View style={[styles.cardStatus, { backgroundColor: columnColor }]} />
+          <View
+            style={[
+              styles.cardStatus,
+              { backgroundColor: columnColor },
+            ]}
+          />
+
           <View style={styles.actions}>
-            <TouchableOpacity onPress={() => openModal(columnKey, card)}>
+            <TouchableOpacity
+              onPress={() => openModal(columnKey, card)}
+              accessibilityLabel="Editar tarefa"
+            >
               <Text style={styles.edit}>✎</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleRemove(columnKey, card.id)}>
+
+            <TouchableOpacity
+              onPress={() => handleRemove(columnKey, card.id)}
+              accessibilityLabel="Excluir tarefa"
+            >
               <Text style={styles.delete}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -235,11 +249,10 @@ export default function KanbanContent() {
 
   return (
     <View style={styles.container}>
-
-
       <ScrollView
         horizontal={!isMobile}
         contentContainerStyle={styles.board}
+        showsHorizontalScrollIndicator={false}
       >
         {columns.map((col) => (
           <View
@@ -249,9 +262,14 @@ export default function KanbanContent() {
           >
             <View style={styles.columnHeader}>
               <Text style={styles.columnTitle}>{col.label}</Text>
+
               <TouchableOpacity
-                style={[styles.addButton, { backgroundColor: col.color }]}
+                style={[
+                  styles.addButton,
+                  { backgroundColor: col.color },
+                ]}
                 onPress={() => openModal(col.key)}
+                accessibilityLabel={`Adicionar tarefa em ${col.label}`}
               >
                 <Text style={styles.addButtonText}>+</Text>
               </TouchableOpacity>
@@ -271,7 +289,12 @@ export default function KanbanContent() {
         ))}
       </ScrollView>
 
-      <Modal visible={isModalOpen} transparent animationType="fade">
+      <Modal
+        visible={isModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsModalOpen(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>
@@ -281,16 +304,27 @@ export default function KanbanContent() {
             <TextInput
               placeholder="Título"
               value={modalData.title}
-              onChangeText={(t) => setModalData({ ...modalData, title: t })}
+              onChangeText={(title) =>
+                setModalData((prev) => ({ ...prev, title }))
+              }
               style={styles.input}
+              accessibilityLabel="Título da tarefa"
+              maxLength={120}
             />
 
             <TextInput
               placeholder="Descrição"
               value={modalData.description}
-              onChangeText={(t) => setModalData({ ...modalData, description: t })}
+              onChangeText={(description) =>
+                setModalData((prev) => ({
+                  ...prev,
+                  description,
+                }))
+              }
               style={styles.textarea}
               multiline
+              textAlignVertical="top"
+              accessibilityLabel="Descrição da tarefa"
             />
 
             <View style={styles.modalButtons}>
@@ -301,8 +335,11 @@ export default function KanbanContent() {
                 <Text>Cancelar</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={{ color: '#fff' }}>Salvar</Text>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+              >
+                <Text style={styles.saveButtonText}>Salvar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -311,88 +348,3 @@ export default function KanbanContent() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 60 },
-  mainTitle: { fontSize: 30, fontWeight: '900', paddingHorizontal: 20 },
-  board: { padding: 20, gap: 20 },
-  column: {
-    width: isMobile ? width - 40 : 340,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 20,
-    padding: 16,
-  },
-  columnHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  columnTitle: { fontSize: 16, fontWeight: '800' },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addButtonText: { color: '#fff', fontSize: 22 },
-  cardsContainer: { minHeight: 120 },
-  card: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  cardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  cardStatus: { width: 10, height: 10, borderRadius: 999 },
-  actions: { flexDirection: 'row', gap: 10 },
-  edit: { color: '#6366F1', fontSize: 18 },
-  delete: { color: '#EF4444', fontSize: 18 },
-  cardTitle: { fontWeight: '800', marginTop: 8 },
-  cardDesc: { color: '#6B7280', marginTop: 4 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modal: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 20,
-  },
-  modalTitle: { fontSize: 20, fontWeight: '800', marginBottom: 10 },
-  input: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-  },
-  textarea: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 12,
-    height: 100,
-    marginBottom: 10,
-  },
-  modalButtons: { flexDirection: 'row', gap: 10 },
-  cancelButton: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  saveButton: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#111827',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-});

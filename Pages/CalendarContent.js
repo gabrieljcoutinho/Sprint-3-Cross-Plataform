@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   View,
@@ -8,64 +9,52 @@ import {
   TextInput,
 } from 'react-native';
 
+import { styles } from '../Css/styleCalendario.js';
+
 const { width } = Dimensions.get('window');
 
-export default function CalendarContent() {
+const MONTHS = [
+  'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL',
+  'MAIO', 'JUNHO', 'JULHO', 'AGOSTO',
+  'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO',
+];
 
-  const currentDate = new Date();
+const DAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 
-  const currentMonth = currentDate.getMonth();
-  const currentYear = currentDate.getFullYear();
-  const today = currentDate.getDate();
+const PRIORITIES = [
+  { label: 'Baixa', value: 'low', color: '#22C55E' },
+  { label: 'Média', value: 'medium', color: '#FACC15' },
+  { label: 'Máxima', value: 'high', color: '#EF4444' },
+];
 
-  const [selectedDay, setSelectedDay] = useState(null);
+const getPriorityColor = (priority) => {
+  const colors = {
+    low: '#22C55E',
+    medium: '#FACC15',
+    high: '#EF4444',
+  };
 
-  const [tasks, setTasks] = useState({});
+  return colors[priority] || colors.low;
+};
 
-  const [editing, setEditing] = useState(false);
+const getHighestPriority = (tasks) => {
+  if (!tasks?.length) return null;
 
-  const [taskText, setTaskText] = useState('');
-  const [priority, setPriority] = useState('low');
+  if (tasks.some((task) => task.priority === 'high')) {
+    return 'high';
+  }
 
-  const months = [
-    'JANEIRO',
-    'FEVEREIRO',
-    'MARÇO',
-    'ABRIL',
-    'MAIO',
-    'JUNHO',
-    'JULHO',
-    'AGOSTO',
-    'SETEMBRO',
-    'OUTUBRO',
-    'NOVEMBRO',
-    'DEZEMBRO',
-  ];
+  if (tasks.some((task) => task.priority === 'medium')) {
+    return 'medium';
+  }
 
-  const days = [
-    'DOM',
-    'SEG',
-    'TER',
-    'QUA',
-    'QUI',
-    'SEX',
-    'SÁB',
-  ];
+  return 'low';
+};
 
-  const daysInMonth = new Date(
-    currentYear,
-    currentMonth + 1,
-    0
-  ).getDate();
-
-  const firstDay = new Date(
-    currentYear,
-    currentMonth,
-    1
-  ).getDay();
-
+const createCalendar = (year, month) => {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDay = new Date(year, month, 1).getDay();
   const calendar = [];
-
   let week = [];
 
   for (let i = 0; i < firstDay; i++) {
@@ -73,7 +62,6 @@ export default function CalendarContent() {
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
-
     week.push(day);
 
     if (week.length === 7) {
@@ -82,514 +70,261 @@ export default function CalendarContent() {
     }
   }
 
-  while (week.length < 7 && week.length !== 0) {
+  while (week.length > 0 && week.length < 7) {
     week.push('');
   }
 
-  if (week.length > 0) {
-    calendar.push(week);
-  }
+  if (week.length) calendar.push(week);
+
+  return calendar;
+};
+
+export default function CalendarContent() {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const today = currentDate.getDate();
+
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [tasks, setTasks] = useState({});
+  const [editing, setEditing] = useState(false);
+  const [taskText, setTaskText] = useState('');
+  const [priority, setPriority] = useState('low');
+
+  const calendar = createCalendar(currentYear, currentMonth);
 
   const handleSelectDay = (day) => {
-
     if (!day) return;
 
     setSelectedDay(day);
-
     setTaskText('');
     setPriority('low');
-
     setEditing(false);
   };
 
   const saveTask = () => {
-
-    if (!taskText.trim()) return;
+    if (!taskText.trim() || !selectedDay) return;
 
     const newTask = {
       id: Date.now(),
-      text: taskText,
+      text: taskText.trim(),
       priority,
     };
 
-    setTasks((prev) => ({
-      ...prev,
-
-      [selectedDay]: prev[selectedDay]
-        ? [...prev[selectedDay], newTask]
-        : [newTask],
+    setTasks((previousTasks) => ({
+      ...previousTasks,
+      [selectedDay]: [
+        ...(previousTasks[selectedDay] || []),
+        newTask,
+      ],
     }));
 
     setTaskText('');
     setPriority('low');
-
     setEditing(false);
   };
 
-  const getPriorityColor = (type) => {
-
-    switch (type) {
-
-      case 'low':
-        return '#22C55E';
-
-      case 'medium':
-        return '#FACC15';
-
-      case 'high':
-        return '#EF4444';
-
-      default:
-        return '#22C55E';
-    }
-  };
-
-  // PEGA A MAIOR PRIORIDADE DO DIA
-  const getHighestPriority = (taskList) => {
-
-    if (!taskList || taskList.length === 0) {
-      return null;
-    }
-
-    const hasHigh = taskList.some(
-      (task) => task.priority === 'high'
-    );
-
-    if (hasHigh) {
-      return 'high';
-    }
-
-    const hasMedium = taskList.some(
-      (task) => task.priority === 'medium'
-    );
-
-    if (hasMedium) {
-      return 'medium';
-    }
-
-    return 'low';
-  };
+  const selectedTasks = tasks[selectedDay] || [];
 
   return (
     <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: '#F5F5F5',
-      }}
-      contentContainerStyle={{
-        paddingTop: 40,
-        paddingBottom: 40,
-      }}
+      style={styles.container}
+      contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-
-      {/* HEADER */}
-      <View
-        style={{
-          paddingBottom: 25,
-          paddingHorizontal: 22,
-        }}
-      >
-
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-          }}
-        >
-
-          <Text
-            style={{
-              color: '#111',
-              fontSize: 34,
-              fontWeight: '900',
-            }}
-          >
-            {months[currentMonth]}
+      {/* CABEÇALHO */}
+      <View style={styles.header}>
+        <View style={styles.titleContainer}>
+          <Text style={styles.monthTitle}>
+            {MONTHS[currentMonth]}
           </Text>
 
-          <Text
-            style={{
-              color: '#777',
-              fontSize: 24,
-              fontWeight: '700',
-              marginLeft: 10,
-            }}
-          >
+          <Text style={styles.yearTitle}>
             {currentYear}
           </Text>
-
         </View>
       </View>
 
       {/* CALENDÁRIO */}
-      <View
-        style={{
-          marginHorizontal: 18,
-          backgroundColor: '#FFF',
-          borderRadius: 30,
-          padding: 16,
-        }}
-      >
-
-        {/* DIAS */}
-        <View
-          style={{
-            flexDirection: 'row',
-            marginBottom: 10,
-          }}
-        >
-
-          {days.map((day, index) => (
-            <View
-              key={index}
-              style={{
-                flex: 1,
-                alignItems: 'center',
-              }}
-            >
-
+      <View style={styles.calendar}>
+        <View style={styles.weekHeader}>
+          {DAYS.map((day) => (
+            <View key={day} style={styles.weekDay}>
               <Text
-                style={{
-                  color: '#999',
-                  fontWeight: '700',
-                  fontSize: width < 400 ? 10 : 11,
-                }}
+                style={[
+                  styles.weekDayText,
+                  { fontSize: width < 400 ? 10 : 11 },
+                ]}
               >
                 {day}
               </Text>
-
             </View>
           ))}
         </View>
 
-        {/* SEMANAS */}
         {calendar.map((week, weekIndex) => (
-
-          <View
-            key={weekIndex}
-            style={{
-              flexDirection: 'row',
-              marginBottom: 10,
-            }}
-          >
-
+          <View key={weekIndex} style={styles.weekRow}>
             {week.map((day, dayIndex) => {
-
               const isToday = day === today;
-
-              const taskList = tasks[day];
-
-              const highestPriority =
-                getHighestPriority(taskList);
+              const dayTasks = tasks[day];
+              const highestPriority = getHighestPriority(dayTasks);
 
               return (
                 <TouchableOpacity
                   key={dayIndex}
                   activeOpacity={0.8}
+                  disabled={!day}
                   onPress={() => handleSelectDay(day)}
-                  style={{
-                    flex: 1,
-                    height: 62,
-                    marginHorizontal: 3,
-                    borderRadius: 16,
-
-                    justifyContent: 'center',
-                    alignItems: 'center',
-
-                    backgroundColor:
-                      day === ''
-                        ? '#F3F3F3'
-                        : isToday
-                        ? '#6C2BFF'
-                        : '#F7F7F7',
-                  }}
+                  style={[
+                    styles.dayCell,
+                    !day && styles.emptyDay,
+                    isToday && styles.todayCell,
+                  ]}
                 >
-
                   <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: '700',
-
-                      color: isToday
-                        ? '#FFF'
-                        : '#222',
-                    }}
+                    style={[
+                      styles.dayText,
+                      isToday && styles.todayText,
+                    ]}
                   >
                     {day}
                   </Text>
 
-                  {/* BOLINHA PRIORIDADE */}
-                  {taskList && (
+                  {highestPriority && (
                     <View
-                      style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: 999,
-                        marginTop: 5,
-
-                        backgroundColor:
-                          getPriorityColor(
-                            highestPriority
-                          ),
-                      }}
+                      style={[
+                        styles.priorityDot,
+                        {
+                          backgroundColor:
+                            getPriorityColor(highestPriority),
+                        },
+                      ]}
                     />
                   )}
-
                 </TouchableOpacity>
               );
             })}
-
           </View>
         ))}
-
       </View>
 
-      {/* CARD DO DIA */}
-      {selectedDay && (
-
-        <View
-          style={{
-            marginHorizontal: 18,
-            marginTop: 24,
-          }}
-        >
-
-          <Text
-            style={{
-              fontSize: 34,
-              fontWeight: '900',
-              color: '#111',
-              marginBottom: 16,
-            }}
-          >
+      {/* TAREFAS DO DIA */}
+      {selectedDay !== null && (
+        <View style={styles.taskSection}>
+          <Text style={styles.taskTitle}>
             Dia {selectedDay}
           </Text>
 
-          <View
-            style={{
-              backgroundColor: '#FFF',
-              borderRadius: 25,
-              padding: 20,
-            }}
-          >
-
-            {/* SEM TAREFA */}
-            {(!tasks[selectedDay] ||
-              tasks[selectedDay].length === 0) &&
-              !editing && (
-
+          <View style={styles.taskCard}>
+            {selectedTasks.length === 0 && !editing && (
               <TouchableOpacity
                 onPress={() => setEditing(true)}
               >
-
-                <Text
-                  style={{
-                    fontSize: 16,
-                    color: '#666',
-                  }}
-                >
-                  Clique aqui para escrever
-                  alguma tarefa
+                <Text style={styles.emptyTaskText}>
+                  Clique aqui para escrever alguma tarefa
                 </Text>
-
               </TouchableOpacity>
             )}
 
-            {/* LISTA DE TAREFAS */}
-            {tasks[selectedDay] &&
-              tasks[selectedDay].length > 0 && (
+            {selectedTasks.map((task) => (
+              <View
+                key={task.id}
+                style={[
+                  styles.taskItem,
+                  {
+                    borderLeftColor:
+                      getPriorityColor(task.priority),
+                  },
+                ]}
+              >
+                <Text style={styles.taskText}>
+                  {task.text}
+                </Text>
+              </View>
+            ))}
 
-              <>
-                {tasks[selectedDay].map((task) => (
-
-                  <View
-                    key={task.id}
-                    style={{
-                      backgroundColor: '#F8F8F8',
-
-                      borderRadius: 18,
-
-                      padding: 16,
-
-                      marginBottom: 14,
-
-                      borderLeftWidth: 6,
-
-                      borderLeftColor:
-                        getPriorityColor(
-                          task.priority
-                        ),
-                    }}
-                  >
-
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        color: '#111',
-                        lineHeight: 24,
-                      }}
-                    >
-                      {task.text}
-                    </Text>
-
-                  </View>
-                ))}
-
-                <TouchableOpacity
-                  onPress={() => setEditing(true)}
-                  style={{
-                    marginTop: 5,
-                  }}
-                >
-
-                  <Text
-                    style={{
-                      color: '#6C2BFF',
-                      fontWeight: '800',
-                    }}
-                  >
-                    + Adicionar outra tarefa
-                  </Text>
-
-                </TouchableOpacity>
-              </>
+            {selectedTasks.length > 0 && !editing && (
+              <TouchableOpacity
+                onPress={() => setEditing(true)}
+                style={styles.addTaskButton}
+              >
+                <Text style={styles.addTaskText}>
+                  + Adicionar outra tarefa
+                </Text>
+              </TouchableOpacity>
             )}
 
-            {/* FORM */}
+            {/* FORMULÁRIO */}
             {editing && (
-              <>
-
+              <View>
                 <TextInput
                   placeholder="Digite sua tarefa..."
                   value={taskText}
                   onChangeText={setTaskText}
                   multiline
-                  style={{
-                    backgroundColor: '#F5F5F5',
-                    borderRadius: 18,
-                    padding: 18,
-                    minHeight: 140,
-                    textAlignVertical: 'top',
-                  }}
+                  style={styles.taskInput}
+                  placeholderTextColor="#888"
                 />
 
-                <Text
-                  style={{
-                    marginTop: 20,
-                    marginBottom: 10,
-                    fontWeight: '800',
-                    fontSize: 16,
-                  }}
-                >
+                <Text style={styles.priorityTitle}>
                   Prioridade
                 </Text>
 
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    gap: 10,
-                  }}
-                >
-
-                  {[
-                    {
-                      label: 'Baixa',
-                      value: 'low',
-                      color: '#22C55E',
-                    },
-
-                    {
-                      label: 'Média',
-                      value: 'medium',
-                      color: '#FACC15',
-                    },
-
-                    {
-                      label: 'Máxima',
-                      value: 'high',
-                      color: '#EF4444',
-                    },
-                  ].map((item) => (
-
+                <View style={styles.priorityOptions}>
+                  {PRIORITIES.map((item) => (
                     <TouchableOpacity
                       key={item.value}
-                      onPress={() =>
-                        setPriority(item.value)
-                      }
-                      style={{
-                        flex: 1,
-
-                        borderWidth: 2,
-
-                        borderColor:
-                          priority === item.value
-                            ? item.color
-                            : '#E5E5E5',
-
-                        borderRadius: 18,
-
-                        padding: 14,
-
-                        alignItems: 'center',
-                      }}
+                      onPress={() => setPriority(item.value)}
+                      style={[
+                        styles.priorityButton,
+                        {
+                          borderColor:
+                            priority === item.value
+                              ? item.color
+                              : '#E5E5E5',
+                        },
+                      ]}
                     >
-
                       <View
-                        style={{
-                          width: 12,
-                          height: 12,
-                          borderRadius: 999,
-
-                          backgroundColor:
-                            item.color,
-
-                          marginBottom: 8,
-                        }}
+                        style={[
+                          styles.priorityIndicator,
+                          { backgroundColor: item.color },
+                        ]}
                       />
 
-                      <Text>
+                      <Text style={styles.priorityLabel}>
                         {item.label}
                       </Text>
-
                     </TouchableOpacity>
                   ))}
-
                 </View>
 
                 <TouchableOpacity
                   onPress={saveTask}
-                  style={{
-                    backgroundColor: '#6C2BFF',
-
-                    marginTop: 20,
-
-                    borderRadius: 18,
-
-                    paddingVertical: 16,
-
-                    alignItems: 'center',
-                  }}
+                  style={styles.saveButton}
                 >
-
-                  <Text
-                    style={{
-                      color: '#FFF',
-                      fontWeight: '800',
-                    }}
-                  >
+                  <Text style={styles.saveButtonText}>
                     SALVAR TAREFA
                   </Text>
-
                 </TouchableOpacity>
 
-              </>
+                <TouchableOpacity
+                  onPress={() => {
+                    setEditing(false);
+                    setTaskText('');
+                    setPriority('low');
+                  }}
+                  style={styles.cancelButton}
+                >
+                  <Text style={styles.cancelButtonText}>
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
-
           </View>
         </View>
       )}
-
     </ScrollView>
   );
 }
