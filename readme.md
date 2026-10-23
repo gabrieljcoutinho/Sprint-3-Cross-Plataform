@@ -1,158 +1,144 @@
-#  Motiva - Monitoramento Inteligente de Rodovias
+# Motiva — Monitoramento Inteligente de Rodovias
 
-Aplicativo mobile desenvolvido para auxiliar o monitoramento, inspeção e gestão de rodovias concessionadas, permitindo que equipes acompanhem o status das rotas, realizem inspeções e tenham acesso a informações estratégicas de forma rápida e intuitiva.
-
----
-
-##  Sobre o Projeto
-
-O **Motiva** é uma solução voltada para concessionárias de rodovias, centralizando informações operacionais e disponibilizando ferramentas para monitoramento inteligente da infraestrutura rodoviária.
-
-A aplicação foi desenvolvida com foco em usabilidade, organização das informações e agilidade na execução das inspeções de campo.
+Aplicativo mobile desenvolvido para auxiliar o monitoramento, a inspeção e a gestão de rodovias concessionadas, permitindo que equipes acompanhem o status das rotas, realizem inspeções e acessem informações estratégicas de maneira rápida e intuitiva.
 
 ---
 
-##  Funcionalidades
+## Sobre o Projeto
 
-###  Autenticação
+O **Motiva** é uma solução voltada para concessionárias de rodovias, centralizando informações operacionais e disponibilizando ferramentas para o monitoramento inteligente da infraestrutura rodoviária.
 
-- Login para usuários administrativos
-- Login para equipes operacionais
-- Cadastro de novos usuários
-- Controle de acesso ao sistema
+A aplicação foi desenvolvida com foco em usabilidade, organização das informações, modularização dos componentes e agilidade na execução das inspeções de campo.
 
-###  Gestão de Concessionárias
-
-O sistema permite visualizar e acessar diferentes concessionárias:
-
-- Autoban
-- RodoAnel
-- SPVias
-- RioSP
-
-###  Monitoramento Inteligente
-
-- Status da rota em tempo real
-- Indicadores operacionais
-- Monitoramento contínuo
-- Atualizações periódicas
-- Análises inteligentes
-
-###  Módulos de Inspeção
-
-O aplicativo disponibiliza módulos específicos para inspeções:
-
-- Monitoramento da vegetação
-- Controle de altura da vegetação
-- Registro de inspeções
-- Acompanhamento de ocorrências
-- Avaliação das condições da rodovia
+O projeto integra funcionalidades de autenticação, gestão de concessionárias, monitoramento de rotas e módulos de inspeção, proporcionando uma experiência organizada para usuários administrativos e equipes operacionais.
 
 ---
 
-##  Interface
+## Status das Funcionalidades e Sprints
 
-Desenvolvida com foco em:
-
-- Experiência do usuário (UX)
-- Design moderno
-- Navegação intuitiva
-- Responsividade
-- Facilidade de uso em dispositivos móveis
+- **Autenticação:** login e cadastro de usuários operacionais e administrativos. *(Concluído)*
+- **Gestão de Concessionárias:** visualização de Autoban, RodoAnel, SPVias e RioSP. *(Concluído)*
+- **Monitoramento Inteligente:** status das rotas, indicadores e métricas operacionais. *(Concluído)*
+- **Módulos de Inspeção:** Kanban, calendário de inspeções, controle de vegetação e registro de ocorrências. *(Refatorado e modularizado na Sprint 4)*
 
 ---
 
-##  Telas Principais
+## Download do Aplicativo (APK)
 
-### Login
-Autenticação de usuários administrativos e equipes.
+A versão compilada do aplicativo para dispositivos Android poderá ser disponibilizada para download por meio do link abaixo.
 
-### Cadastro
-Criação de novas contas no sistema.
+- [**Baixar APK do Motiva**](https://www.google.com/search?q=COLOQUE_O_LINK_DO_APK_AQUI)
 
-### Home
-Listagem das concessionárias disponíveis para monitoramento.
-
-### Monitoramento
-Visualização do status das rotas e acesso aos módulos de inspeção.
+> **Atenção:** substitua o link provisório pelo endereço real do APK ou pela página de releases do projeto antes de publicar o README.
 
 ---
 
-##  Tecnologias Utilizadas
+## Plano de Negócio
 
-- React Native
-- JavaScript
-- Expo
-- React Navigation
-- React Native Components
+### Proposta de Valor
+
+Reduzir custos operacionais e otimizar o tempo de resposta das equipes de campo das concessionárias de rodovias por meio de um sistema integrado de monitoramento da vegetação e gestão de ocorrências.
+
+### Público-Alvo e Personas
+
+#### Gestores de Operações
+
+- Necessitam de relatórios consolidados.
+- Precisam de uma visão geral das rodovias monitoradas.
+- Acompanham indicadores e informações operacionais das concessionárias Autoban, RodoAnel, SPVias e RioSP.
+
+#### Equipes de Campo e Inspetores
+
+- Necessitam de ferramentas mobile para registrar inspeções diretamente nas rodovias.
+- Utilizam recursos como Kanban, calendário e alertas.
+- Acompanham ocorrências e condições da infraestrutura rodoviária.
+
+### Modelo de Receita
+
+Modelo **B2B (Business-to-Business)** baseado em **Software como Serviço (SaaS)**, com cobrança de assinatura mensal por concessionária.
+
+O valor poderá variar conforme a extensão da malha rodoviária monitorada e a necessidade de suporte técnico gerenciado.
+
+### Custos Estimados de Operação
+
+- Infraestrutura de servidores em nuvem.
+- Hospedagem e manutenção do banco de dados.
+- Manutenção corretiva e evolutiva do aplicativo mobile.
+- Suporte técnico.
+- Treinamento operacional das equipes das concessionárias.
+
+### Diferenciais Competitivos
+
+- Interface modular, responsiva e organizada em componentes reutilizáveis.
+- Integração entre o cronograma de inspeções, o calendário, o Kanban e os alertas de vegetação.
+- Centralização de informações operacionais.
+- Foco nas necessidades de monitoramento e inspeção de rodovias concessionadas no Brasil.
 
 ---
 
-##  Estrutura do Projeto
+## Funcionalidades
 
-```bash
+### 1. Autenticação
+
+- Login de usuários administrativos.
+- Login de equipes operacionais.
+- Cadastro de novos usuários.
+- Controle de acesso ao sistema.
+
+### 2. Gestão de Concessionárias
+
+O sistema permite visualizar e acessar informações relacionadas às seguintes concessionárias:
+
+- Autoban.
+- RodoAnel.
+- SPVias.
+- RioSP.
+
+### 3. Monitoramento Inteligente
+
+- Acompanhamento do status das rotas.
+- Visualização de indicadores operacionais.
+- Monitoramento da infraestrutura rodoviária.
+- Atualizações periódicas.
+- Análises inteligentes para apoiar o acompanhamento operacional.
+
+### 4. Módulos de Inspeção
+
+O aplicativo disponibiliza módulos específicos para auxiliar a organização e a execução das inspeções de campo.
+
+- Monitoramento da vegetação.
+- Controle da altura da vegetação.
+- Registro de inspeções.
+- Acompanhamento de ocorrências.
+- Avaliação das condições da rodovia.
+- Organização de atividades por meio de Kanban.
+- Acompanhamento de inspeções por calendário.
+
+---
+
+## Tecnologias Utilizadas
+
+- **React Native:** desenvolvimento da interface mobile.
+- **JavaScript:** implementação da lógica da aplicação.
+- **Expo:** ferramentas para desenvolvimento e execução do aplicativo.
+- **React Navigation:** navegação entre telas.
+- **Arquitetura modular:** organização do código em componentes reutilizáveis.
+- **Estilos separados:** separação da estilização e da lógica dos componentes.
+
+---
+
+## Estrutura do Projeto
+
+A estrutura principal do projeto está organizada nos seguintes diretórios:
+
+```text
 src/
-├── assets/
 ├── components/
+├── data/
 ├── navigation/
 ├── screens/
 ├── services/
-├── styles/
-└── utils/
-```
-
----
-
-##  Como Executar o Projeto
-
-### Clonar o repositório
-
-```bash
-git clone https://github.com/gabrieljcoutinho/Sprint-2-Cross-Plataform.git
-```
-
-### Acessar a pasta do projeto
-
-```bash
-cd seu-repositorio
-```
-
-### Instalar dependências
-
-```bash
-npm install
-```
-
-### Executar o projeto
-
-```bash
-npm start
-```
-
-ou
-
-```bash
-npx expo start
-```
-
----
-
-##  Objetivo
-
-Desenvolver uma solução mobile capaz de auxiliar concessionárias na gestão e monitoramento de rodovias, oferecendo uma plataforma intuitiva para acompanhamento de indicadores, inspeções e informações operacionais.
-
----
-
-##  Projeto Acadêmico
-
-Projeto desenvolvido para o **Challenge 2026**, aplicando conceitos de:
-
-- Desenvolvimento Mobile
-- UX/UI Design
-- React Native
-- Metodologias Ágeis
-- Monitoramento de Infraestrutura
-
+└── styles/
 ---
 
 ##  Licença
